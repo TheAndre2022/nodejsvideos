@@ -1,0 +1,48 @@
+const express = require('express');
+const crypto = require("crypto");
+const DatabaseOperations = require('./database.js');
+const Redis = require('ioredis');
+
+const dbOperations = new DatabaseOperations();
+const redisClient = new Redis({
+    host: '127.0.0.1',
+    port: 6379,
+});
+
+const playList = express.Router();
+
+// Função para obter a chave única do Redis
+function getRedisKey(id, playlist_id, unique_id) {
+    const redisKeys =  id + '&' + playlist_id + '&' + unique_id;
+    return 'play' + crypto.createHash("md5").update(redisKeys).digest("hex");
+}
+
+
+
+playList.get("/", async function (req, res) {
+    //const { action_id, chave, playlist_id, unique_id } = req.params;
+    const action_id = req.query.action_id ?? 'consultar';
+    const chave = req.query.chave ?? 'IxMWE-FlMzE0-E0YzRlYj-lYjhj';
+    const playlist_id = req.query.playlist ?? 'andre';
+    const unique_id = req.query.unique_id ?? 'secreto';
+    const termo = req.query.termo ?? 'Dengue'; 
+    const keys = chave || 'JjYmF-YyMGE2-E2MGY5ND-5NDhl';
+   
+    try {
+        const id = await dbOperations.getIdFromKey(keys);
+        if (!id || id === 9999) {
+            return res.status(401).send('Acesso não autorizado');
+        }
+
+        let resposta = {};
+    resposta ['andre'] = "Aqui deverá ser a futura função consulta"; 
+
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(resposta));
+    } catch (error) {
+        console.error('Erro ao executar a consulta SQL:', error);
+        res.status(500).send('Erro interno no servidor');
+    }
+});
+
+module.exports = playList;
